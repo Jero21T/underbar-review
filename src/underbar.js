@@ -93,13 +93,9 @@
   _.reject = function(collection, test) {
     // TIP: see if you can re-use _.filter() here, without simply
     // copying code in and modifying it
-    var passingValues = [];
-    _.each(collection, function(value, index, collection) {
-      if (!test(value)) {
-        passingValues.push(value);
-      }
+    return _.filter(collection, function(value) {
+      return !(test(value));
     });
-    return passingValues;
   };
 
   // Produce a duplicate-free version of the array.
@@ -113,15 +109,26 @@
     if (arguments.length < 2) {
       isSorted = false;
     }
-
-    _.each(array, function(value, index) {
-      if (iteratorUniqueValues.includes(iterator(value)) === false) {
-        iteratorUniqueValues.push(iterator(value));
-        uniqueValues.push(value);
+    
+    if (isSorted) {
+      for (var i = 0; i < array.length; i++) {
+        if (i === 0) {
+          uniqueValues.push(array[i]);
+        } else {
+          if (iterator(array[i]) !== iterator(array[i - 1])) {
+            uniqueValues.push(array[i]);
+          }
+        }
       }
-    });
-
-
+      
+    } else {
+      _.each(array, function(value, index) {
+        if (iteratorUniqueValues.includes(iterator(value)) === false) {
+          iteratorUniqueValues.push(iterator(value));
+          uniqueValues.push(value);
+        }
+      });
+    }
     return uniqueValues;
   };
 
@@ -278,6 +285,17 @@
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    var objectsToRetrievePropertiesFrom = [...arguments].slice(1);
+    
+    _.each(objectsToRetrievePropertiesFrom, function(extensionObject) {
+      _.each(extensionObject, function(value, key) {
+        if (!obj.hasOwnProperty(key)) {
+          obj[key] = value;
+        }
+      });
+    });
+    
+    return obj;
   };
 
 
@@ -321,6 +339,18 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    var functionResultCache = {};
+    
+    return function() {
+      
+      if (functionResultCache.hasOwnProperty(JSON.stringify(arguments))) {
+        return functionResultCache[JSON.stringify(arguments)];
+      } else {
+        var result = func.apply(this, arguments);
+        functionResultCache[JSON.stringify(arguments)] = result;
+        return result;
+      }
+    };
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -330,6 +360,10 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    var argsForSetTimeout = [...arguments].slice(2);
+    setTimeout(function() {
+      func.apply(this, argsForSetTimeout);
+    }, wait);
   };
 
 
@@ -344,7 +378,21 @@
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+    
+    var randomArray = [];
+    
+    for (var i = 0; i < array.length; i++) {
+      var randomNumber = Math.random();
+      if (randomNumber >= 0.5) {
+        randomArray.push(array[i]);
+      } else {
+        randomArray.unshift(array[i]);
+      }
+    }
+    
+    return randomArray;
   };
+
 
 
   /**
