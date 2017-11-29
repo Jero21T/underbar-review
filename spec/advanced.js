@@ -30,7 +30,7 @@
       });
 
     });
-
+    
     describe('invoke, when provided a method name', function() {
 
       it('runs the specified method on each item in the array, and returns a list of results', function() {
